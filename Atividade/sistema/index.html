@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Almoxarifado</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 4. TELA DE AUTENTICAÇÃO (LOGIN) -->
+    <section id="screen-login" class="screen active">
+        <div class="login-card">
+            <h2>Almoxarifado Sys</h2>
+            <p>Controle de Gestão de Estoque</p>
+            <div id="login-alert" class="alert hidden"></div>
+            <form id="form-login">
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="login-email" required placeholder="admin@embalagens.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="login-senha" required placeholder="******">
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar no Sistema</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- CONTAINER AUTENTICADO -->
+    <div id="app-container" class="hidden">
+        <!-- HEADER COM NOME DO USUÁRIO E LOGOUT -->
+        <header class="navbar">
+            <div class="brand">📦 Indústria Embalagens</div>
+            <div class="user-info">
+                <span>Usuário: <strong id="user-display-name">---</strong></span>
+                <button id="btn-logout" class="btn btn-danger btn-sm">Sair (Logout)</button>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- 5. INTERFACE PRINCIPAL / DASHBOARD -->
+            <section id="screen-main" class="screen">
+                <div class="welcome-box">
+                    <h1>Painel Principal de Almoxarifado</h1>
+                    <p>Selecione um módulo para gerenciar o estoque:</p>
+                    <div class="menu-grid">
+                        <div class="card-option" onclick="navigateTo('screen-cadastro')">
+                            <h3>📦 Cadastro de Produtos</h3>
+                            <p>Cadastre, edite, busque e gerencie a lista de produtos da indústria.</p>
+                        </div>
+                        <div class="card-option" onclick="navigateTo('screen-gestao')">
+                            <h3>🔄 Gestão de Estoque</h3>
+                            <p>Registre entradas/saídas com alertas de estoque mínimo e ordenação alfabética.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. INTERFACE CADASTRO DE PRODUTO -->
+            <section id="screen-cadastro" class="screen">
+                <div class="section-header">
+                    <h2>Cadastro e Lista de Produtos</h2>
+                    <button class="btn btn-secondary" onclick="navigateTo('screen-main')">⬅ Voltar ao Menu Principal</button>
+                </div>
+
+                <div class="card form-card">
+                    <h3 id="form-product-title">Cadastrar Novo Produto</h3>
+                    <form id="form-produto">
+                        <input type="hidden" id="prod-id">
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label>Nome do Produto*</label>
+                                <input type="text" id="prod-nome" placeholder="Ex: Caixa KRAFT Papelão">
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Categoria*</label>
+                                <select id="prod-categoria">
+                                    <option value="">Selecione...</option>
+                                    <option value="Papelão">Caixa de Papelão</option>
+                                    <option value="Frasco Plástico">Frasco Plástico</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-12">
+                                <label>Especificações (Gramatura/Dimensão/Capacidade/Tampa)*</label>
+                                <input type="text" id="prod-especificacao" placeholder="Ex: Gramatura 400g/m² - 30x20x15cm">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label>Quantidade Inicial*</label>
+                                <input type="number" id="prod-qtd" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Estoque Mínimo*</label>
+                                <input type="number" id="prod-min" min="0" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">Salvar Produto</button>
+                            <button type="button" id="btn-cancel-edit" class="btn btn-secondary hidden" onclick="resetProductForm()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- LISTAGEM E CAMPO DE BUSCA -->
+                <div class="card">
+                    <div class="table-tools">
+                        <h3>Produtos Cadastrados</h3>
+                        <input type="text" id="search-input" placeholder="🔍 Buscar produto por termo..." onkeyup="filterProducts()">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Especificação</th>
+                                <th>Qtd Atual</th>
+                                <th>Estoque Mín.</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-products-body">
+                            <!-- Preenchido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 7. INTERFACE GESTÃO DE ESTOQUE -->
+            <section id="screen-gestao" class="screen">
+                <div class="section-header">
+                    <h2>Gestão de Movimentação de Estoque</h2>
+                    <button class="btn btn-secondary" onclick="navigateTo('screen-main')">⬅ Voltar ao Menu Principal</button>
+                </div>
+
+                <div id="stock-alert-container"></div>
+
+                <div class="card form-card">
+                    <h3>Registrar Entrada / Saída</h3>
+                    <form id="form-movimentacao">
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label>Selecione o Produto (Ordenado Alfabeticamente - QuickSort)*</label>
+                                <select id="mov-produto-id" required>
+                                    <!-- Carregado ordenado alfabeticamente -->
+                                </select>
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Tipo de Movimentação*</label>
+                                <select id="mov-tipo" required>
+                                    <option value="ENTRADA">ENTRADA (+)</option>
+                                    <option value="SAIDA">SAÍDA (-)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label>Quantidade*</label>
+                                <input type="number" id="mov-qtd" min="1" required placeholder="1">
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Data da Movimentação*</label>
+                                <input type="datetime-local" id="mov-data" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Confirmar Movimentação</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Histórico de Movimentações (Rastreabilidade)</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Produto</th>
+                                <th>Tipo</th>
+                                <th>Qtd</th>
+                                <th>Responsável</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-history-body">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
